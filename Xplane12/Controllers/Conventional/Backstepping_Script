@@ -1,0 +1,251 @@
+"@author: Gandhi Alexis Sinhue Contreras torres"
+
+import sys
+import xpc
+import Backstepping
+from datetime import datetime, timedelta
+import tkinter as tk
+from tkinter import ttk
+
+
+update_interval = 0.100 # seconds
+start = datetime.now()
+last_update = start
+
+# defining the initial K value
+K_roll = 0.001
+K_pitch = 0.001
+Ku_roll = 33
+Ku_pitch = 39
+tau_roll = 0.03
+tau_pitch = 0.03
+
+# initializing both Backstepping controllers
+roll_Backstepping = Backstepping.Backstepping(K_roll,Ku_roll,tau_roll)
+pitch_Backstepping = Backstepping.Backstepping(K_pitch,Ku_pitch,tau_pitch)
+
+# setting the desired values
+# roll = 0 means wings level
+# pitch = 2 means slightly nose up, which is required for level flight
+desired_roll = 0
+desired_pitch = 6
+# setting the Backstepping set points with our desired values
+roll_Backstepping.SetPoint = desired_roll
+pitch_Backstepping.SetPoint = desired_pitch
+
+# Values Saved for plots
+v1 = []
+v2 = []
+v3 = []
+v4 = []
+v5 = []
+v6 = []
+v7 = []
+c1 = []
+c2 = []
+c3 = []
+c4 = []
+c5 = []
+
+def monitor():
+    global last_update
+    with xpc.XPlaneConnect() as client:
+        while True:
+            if (datetime.now() > last_update + timedelta(milliseconds = update_interval * 1000)):
+                last_update = datetime.now()
+                print(f"loop start - {datetime.now()}")
+
+                posi = client.getPOSI();
+                ctrl = client.getCTRL();
+
+                current_roll = posi[4]
+                current_pitch = posi[3]
+                
+                current_elevator = ctrl[1]
+                current_aileron = ctrl[0]
+
+                roll_Backstepping.update(current_roll, current_aileron)
+                pitch_Backstepping.update(current_pitch, current_elevator)
+                
+                new_ail_ctrl = roll_Backstepping.output
+                new_ele_ctrl = pitch_Backstepping.output
+                
+                current_altitude = posi[2]
+                # if current_altitude < 89.83 + 20:
+                #     landing_gear = 1
+                # elif current_altitude >= 89.83 + 20:
+                #     landing_gear = 0
+                
+                engines = 0.9
+
+                ctrl = [new_ele_ctrl, new_ail_ctrl, 0.0, -998] # ele, ail, rud, thr. -998 means don't change
+                client.sendCTRL(ctrl)
+                
+                #v1.append(pitch_Backstepping.feedback_value)
+                v1.append(posi[0])
+                v2.append(posi[1])
+                v3.append(posi[2])
+                v4.append(posi[3])
+                v5.append(posi[4])
+                v6.append(posi[5])
+                v7.append(posi[6])
+                c1.append(ctrl[0])
+                c2.append(ctrl[1])
+                c3.append(ctrl[2])
+                c4.append(ctrl[3])
+                #c5.append(ctrl[4])
+
+                output = f"current values --    roll: {current_roll: 0.3f},  pitch: {current_pitch: 0.3f}, altitude: {current_altitude: 0.3f}"
+                output = output + "\n" + f"PID outputs    --    roll: {roll_Backstepping.output: 0.3f},  pitch: {pitch_Backstepping.output: 0.3f}"
+                output = output + "\n"
+                print(output)
+
+if __name__ == "__main__":
+    monitor()
+    
+# Data Analysis
+import matplotlib.pyplot as plt
+
+fig, f1 = plt.subplots(figsize=(9,5))
+f1.plot(v1, color= "blue", label="grados", linewidth=2.1)
+f1.set_title("Latitude", fontsize=15)
+f1.grid(color='gray', linestyle='--', linewidth=0.25)
+f1.legend(loc="best")
+f1.set_xlabel("Tiempo (s)", fontsize=15)
+f1.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f2 = plt.subplots(figsize=(9,5))
+f2.plot(v2, color= "blue", label="grados", linewidth=2.1)
+f2.set_title("Longitude", fontsize=15)
+f2.grid(color='gray', linestyle='--', linewidth=0.25)
+f2.legend(loc="best")
+f2.set_xlabel("Tiempo (s)", fontsize=15)
+f2.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f3 = plt.subplots(figsize=(9,5))
+f3.plot(v3, color= "blue", label="grados", linewidth=2.1)
+f3.set_title("Altitude", fontsize=15)
+f3.grid(color='gray', linestyle='--', linewidth=0.25)
+f3.legend(loc="best")
+f3.set_xlabel("Tiempo (s)", fontsize=15)
+f3.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f4 = plt.subplots(figsize=(9,5))
+f4.plot(v4, color= "blue", label="grados", linewidth=2.1)
+f4.set_title("Cabeceo", fontsize=15)
+f4.grid(color='gray', linestyle='--', linewidth=0.25)
+f4.legend(loc="best")
+f4.set_xlabel("Tiempo (s)", fontsize=15)
+f4.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f5 = plt.subplots(figsize=(9,5))
+f5.plot(v5, color= "blue", label="grados", linewidth=2.1)
+f5.set_title("Alabeo", fontsize=15)
+f5.grid(color='gray', linestyle='--', linewidth=0.25)
+f5.legend(loc="best")
+f5.set_xlabel("Tiempo (s)", fontsize=15)
+f5.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f6 = plt.subplots(figsize=(9,5))
+f6.plot(v6, color= "blue", label="grados", linewidth=2.1)
+f6.set_title("Guiñada", fontsize=15)
+f6.grid(color='gray', linestyle='--', linewidth=0.25)
+f6.legend(loc="best")
+f6.set_xlabel("Tiempo (s)", fontsize=15)
+f6.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, f7 = plt.subplots(figsize=(9,5))
+f7.plot(v7, color= "blue", label="grados", linewidth=2.1)
+f7.set_title("Tren de Aterrizaje", fontsize=15)
+f7.grid(color='gray', linestyle='--', linewidth=0.25)
+f7.legend(loc="best")
+f7.set_xlabel("Tiempo (s)", fontsize=15)
+f7.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, fc1 = plt.subplots(figsize=(9,5))
+fc1.plot(c1, color= "blue", label="stick (-1 a 1)", linewidth=2.1)
+fc1.set_title("Elevadores", fontsize=15)
+fc1.grid(color='gray', linestyle='--', linewidth=0.25)
+fc1.legend(loc="best")
+fc1.set_xlabel("Tiempo (s)", fontsize=15)
+fc1.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, fc2 = plt.subplots(figsize=(9,5))
+fc2.plot(c2, color= "blue", label="stick (-1 a 1)", linewidth=2.1)
+fc2.set_title("Alerones", fontsize=15)
+fc2.grid(color='gray', linestyle='--', linewidth=0.25)
+fc2.legend(loc="best")
+fc2.set_xlabel("Tiempo (s)", fontsize=15)
+fc2.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, fc3 = plt.subplots(figsize=(9,5))
+fc3.plot(c3, color= "blue", label="grados", linewidth=2.1)
+fc3.set_title("Timones", fontsize=15)
+fc3.grid(color='gray', linestyle='--', linewidth=0.25)
+fc3.legend(loc="best")
+fc3.set_xlabel("Tiempo (s)", fontsize=15)
+fc3.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, fc4 = plt.subplots(figsize=(9,5))
+fc4.plot(c4, color= "blue", label="grados", linewidth=2.1)
+fc4.set_title("Acelerador", fontsize=15)
+fc4.grid(color='gray', linestyle='--', linewidth=0.25)
+fc4.legend(loc="best")
+fc4.set_xlabel("Tiempo (s)", fontsize=15)
+fc4.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+fig, fc5 = plt.subplots(figsize=(9,5))
+fc5.plot(c5, color= "blue", label="grados", linewidth=2.1)
+fc5.set_title("Tren de Aterrizaje", fontsize=15)
+fc5.grid(color='gray', linestyle='--', linewidth=0.25)
+fc5.legend(loc="best")
+fc5.set_xlabel("Tiempo (s)", fontsize=15)
+fc5.legend(prop={'size': 15})
+plt.xticks(fontsize=15)
+plt.yticks(fontsize=15)
+
+from mpl_toolkits import mplot3d
+from matplotlib.ticker import ScalarFormatter
+
+fig20, ax20  = plt.subplots(figsize=(12,6))
+ax20 = plt.axes(projection='3d')
+ax20.plot3D(v2, v1, v3,color="blue", label='Trayectoria de EHEKATL BWB')
+ax20.set_xlabel('Longitud $(°)$', fontsize=12)
+ax20.set_ylabel('Latitud $(°)$', fontsize=12)
+ax20.set_zlabel('Altura (m)', fontsize=12)
+ax20.tick_params(axis='x', labelsize=10, pad=0)  
+ax20.tick_params(axis='y', labelsize=10, pad=0)  
+ax20.tick_params(axis='z', labelsize=10, pad=3)  
+
+ax20.scatter([v2[0]], [v1[0]], [v3[0]], color='red', s=50, label='Inicio')
+ax20.scatter([v2[-1]], [v1[-1]], [v3[-1]], color='orange', s=50, label='Final')
+ax20.legend()
+ 
+ax20.xaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+ax20.yaxis.set_major_formatter(ScalarFormatter(useOffset=False))
+
+ax20.view_init(15, 15)
+
+plt.show()
