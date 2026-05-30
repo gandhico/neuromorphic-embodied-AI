@@ -1,0 +1,56 @@
+@author: Gandhi Alexis Sinhue Contreras Torres
+
+import time
+
+class Backstepping:
+    """Backstepping Controller
+    """
+    def __init__(self, K=0.2,Ku = 0.2,Tau = 0.03, current_time=None):
+
+        self.k = K
+        self.ku = Ku
+        self.tau = Tau
+
+        self.sample_time = 0.00
+        self.current_time = current_time if current_time is not None else time.time()
+        self.last_time = self.current_time
+
+        self.clear()
+
+    def clear(self):
+        """Clears Backstepping computations and coefficients"""
+        self.SetPoint = 0.0
+
+        self.k_Term = 0.0
+        self.ku_Term = 0.0
+        self.tau_Term = 0.0
+        self.last_error = 0.0
+        self.output = 0.0
+
+    def update(self, feedback_value,ctrl_value, current_time=None):
+
+        self.feedback_value = feedback_value
+        self.error = self.feedback_value - self.SetPoint
+        #error = self.SetPoint - feedback_value
+ 
+        self.current_time = current_time if current_time is not None else time.time()
+        delta_time = self.current_time - self.last_time
+
+        if (delta_time >= self.sample_time):
+            #self.k_Term = self.k*error
+            ud = - self.k*self.error
+            error_u = ctrl_value  - ud
+            du = - self.k*(error_u - ud)
+
+            # Remember last time and last error for next calculation
+            self.last_time = self.current_time
+            self.last_error = self.error
+
+            #self.output = ctrl_value + self.tau_Term*(du - error - self.ku_Term*error_u)
+            self.output = ctrl_value + self.tau*(du - self.error - self.ku*error_u)
+
+    def setSampleTime(self, sample_time):
+        """Backstepping that should be updated at a regular interval.
+        Based on a pre-determined sampe time, the Backstepping decides if it should compute or return immediately.
+        """
+        self.sample_time = sample_time
