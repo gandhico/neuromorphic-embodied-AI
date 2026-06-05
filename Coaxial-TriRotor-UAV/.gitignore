@@ -1,0 +1,64 @@
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# ---- Virtual environments ----
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# ---- Jupyter ----
+.ipynb_checkpoints/
+
+# ---- Testing / coverage ----
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+
+# ---- ML / Nengo artifacts (keep large outputs out of git) ----
+*.ckpt
+*.pth
+*.pt
+*.h5
+*.hdf5
+*.pkl
+*.npz
+*.npy
+checkpoints/
+runs/
+logs/
+wandb/
+mlruns/
+
+# ---- Data (link externally instead, e.g. Zenodo) ----
+data/
+datasets/
+*.csv
+*.parquet
+# (delete the *.csv line above if small config CSVs belong in the repo)
+
+# ---- Secrets / credentials (NEVER commit) ----
+.env
+*.key
+*.pem
+secrets.*
+credentials.*
+
+# ---- Editors / OS ----
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini

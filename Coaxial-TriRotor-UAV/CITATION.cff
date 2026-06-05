@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+title: "Coaxial TriRotor — Neuromorphic Control with Nengo"
+abstract: "TODO: one- or two-sentence description."
+authors:
+  - family-names: "TODO-LastName"
+    given-names: "TODO-FirstName"
+    # orcid: "https://orcid.org/0000-0000-0000-0000"
+    # affiliation: "TODO"
+version: "0.1.0"
+date-released: "2026-06-05"
+license: "TODO"   # e.g. MIT, Apache-2.0, BSD-3-Clause
+url: "https://github.com/TODO-USERNAME/coaxial-trirotor-nengo"
+keywords:
+  - spiking neural networks
+  - neuromorphic control
+  - Nengo
+  - UAV
+
+# Once the paper is published, uncomment and complete this so tools cite the paper:
+# preferred-citation:
+#   type: article
+#   title: "TODO: paper title"
+#   authors:
+#     - family-names: "TODO-LastName"
+#       given-names: "TODO-FirstName"
+#   journal: "TODO"
+#   year: 2026
+#   doi: "TODO"
